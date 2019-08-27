@@ -1,3 +1,9 @@
+<script src="/login/status"></script>
+<script>
+    if (!isLogin) {
+        location.href = "login.html";
+    }
+</script>
 <!DOCTYPE html>
 <html lang="zh-CN">
 
@@ -279,17 +285,18 @@
                 $('#preview').attr('src', '../assets/img/default.png');
                 $('#hiddenavatar').val('');
             }
+            if (role == '激活') {
+                $('#jh').prop('checked', true);
+            } else {
+                $('#wjh').prop('checked', false);
+            }
             if (status == '超级管理员') {
                 $('#admin').prop('checked', true);
             } else {
                 $('#normal').prop('checked', false);
             }
 
-            if (role == '激活') {
-                $('#jh').prop('checked', true);
-            } else {
-                $('#wjh').prop('checked', false);
-            }
+
             $('#addUser').hide()
             $('#editUser').show();
 
@@ -322,6 +329,12 @@
 
             })
 
+        });
+        $('tbody').on('click', '.delete', function() {
+            if (comfirm('你确认要删除吗？')) {
+                var id = userArr.findIndex(item => item._id == res._id);
+
+            }
         })
     </script>
 </body>
