@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="../assets/vendors/nprogress/nprogress.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
     <script src="../assets/vendors/nprogress/nprogress.js"></script>
+    <script src="./comment.js"></script>
 </head>
 
 <body>
@@ -27,7 +28,7 @@
             <button class="btn btn-default navbar-btn fa fa-bars"></button>
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="profile.html"><i class="fa fa-user"></i>个人中心</a></li>
-                <li><a href="login.html"><i class="fa fa-sign-out"></i>退出</a></li>
+                <li><a href="login.html"><i class="fa fa-sign-out" id="loginout"></i>退出</a></li>
             </ul>
         </nav>
         <div class="container-fluid">
@@ -40,17 +41,18 @@
       </div> -->
             <div class="row">
                 <div class="col-md-4">
-                    <form>
+                    <form id="slidesForm">
                         <h2>添加新轮播内容</h2>
                         <div class="form-group">
                             <label for="image">图片</label>
                             <!-- show when image chose -->
-                            <img class="help-block thumbnail" style="display: none">
-                            <input id="image" class="form-control" name="image" type="file">
+                            <img class="help-block thumbnail" style="display: none" id="prev">
+                            <input id="image" class="form-control" namae="image" type="file">
+                            <input id="file" type="hidden" name="image">
                         </div>
                         <div class="form-group">
                             <label for="text">文本</label>
-                            <input id="text" class="form-control" name="text" type="text" placeholder="文本">
+                            <input id="text" class="form-control" name="title" type="text" placeholder="文本">
                         </div>
                         <div class="form-group">
                             <label for="link">链接</label>
@@ -72,7 +74,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
+                            <!-- <tr>
                                 <td class="text-center"><img class="slide" src="../uploads/slide_1.jpg"></td>
                                 <td>XIU功能演示</td>
                                 <td>#</td>
@@ -87,7 +89,7 @@
                                 <td class="text-center">
                                     <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
                                 </td>
-                            </tr>
+                            </tr> -->
                         </tbody>
                     </table>
                 </div>
@@ -134,9 +136,108 @@
 
     <script src="../assets/vendors/jquery/jquery.js"></script>
     <script src="../assets/vendors/bootstrap/js/bootstrap.js"></script>
-    <script>
-        NProgress.done()
+    <script src="../assets//vendors/art-template/template-web.js"></script>
+    <script type="text/html" id="slidesTpl">
+        {{each data}}
+        <tr>
+            <td class="text-center"><img class="slide" src="{{$value.image}}"></td>
+            <td>{{$value.title}}</td>
+            <td>{{$value.link}}</td>
+            <td class="text-center">
+                <a href="javascript:;" class="btn btn-danger btn-xs delete" data-id="{{$value._id}}">删除</a>
+            </td>
+        </tr>
+        {{/each}}
+
     </script>
-</body>
+
 
 </html>
+<script>
+    // 文件上传
+    $('#image').on('change', function() {
+        var file = this.files[0];
+        var formData = new FormData();
+        formData.append('image', file);
+        $.ajax({
+            type: 'post',
+            url: '/upload',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(res) {
+                console.log(res);
+                $('#file').val(res[0].image);
+                $('#prev').show().attr('src', res[0].image);
+            }
+        })
+    });
+
+    // 添加
+    var sArr = [];
+    $('#slidesForm').on('submit', function() {
+        formData = $(this).serialize();
+        $.ajax({
+            type: 'post',
+            url: '/slides',
+            data: formData,
+            success: function(res) {
+                sArr.push(res);
+                render(sArr);
+            }
+        })
+        return false;
+    });
+
+
+    // 向服务器端发送请求 索要图片轮播列表数据
+    $.ajax({
+        type: 'get',
+        url: '/slides',
+        success: function(res) {
+            // console.log(res);
+            sArr = res;
+            render();
+        }
+    })
+
+    function render() {
+        var html = template('slidesTpl', {
+            data: sArr
+        });
+        $('tbody').html(html);
+    }
+
+    // 删除
+    $('tbody').on('click', '.delete', function() {
+        if (confirm('你确定要删除吗？')) {
+            var id = $(this).attr('data-id');
+            $.ajax({
+                type: 'delete',
+                url: '/slides/' + id,
+                success: function(res) {
+                    // console.log(res);
+                    var index = sArr.findIndex(item => item._id == res._id);
+                    sArr.splice(index, 1);
+                    render(sArr);
+                }
+            })
+        }
+    })
+
+    //展示用户相关信息
+    $.ajax({
+        type: 'get',
+        url: '/users/' + userId,
+        success: function(res) {
+            $('.avatar').attr('src', res.avatar)
+            $('.profile .name').html(res.nickName)
+        }
+    });
+</script>
+<script>
+    NProgress.done()
+</script>
+</body>
+
+</htm

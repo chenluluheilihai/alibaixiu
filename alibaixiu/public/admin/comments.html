@@ -27,20 +27,20 @@
             <button class="btn btn-default navbar-btn fa fa-bars"></button>
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="profile.html"><i class="fa fa-user"></i>个人中心</a></li>
-                <li><a href="login.html"><i class="fa fa-sign-out"></i>退出</a></li>
+                <li><a href="login.html"><i class="fa fa-sign-out" id="loginout"></i>退出</a></li>
             </ul>
         </nav>
         <div class="container-fluid">
             <div class="page-title">
                 <h1>所有评论</h1>
             </div>
-            <div class="page-action">
+            <div class="page-action" id="pageBox">
                 <ul class="pagination pagination-sm pull-right">
-                    <li><a href="#">上一页</a></li>
+                    <!-- <li><a href="#">上一页</a></li>
                     <li><a href="#">1</a></li>
                     <li><a href="#">2</a></li>
                     <li><a href="#">3</a></li>
-                    <li><a href="#">下一页</a></li>
+                    <li><a href="#">下一页</a></li> -->
                 </ul>
             </div>
             <table class="table table-striped table-bordered table-hover">
@@ -55,7 +55,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="danger">
+                    <!-- <tr class="danger">
                         <td>大大</td>
                         <td>楼主好人，顶一个</td>
                         <td>《Hello world》</td>
@@ -65,7 +65,7 @@
                             <a href="post-add.html" class="btn btn-info btn-xs">批准</a>
                             <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
                         </td>
-                    </tr>
+                     </tr>
                     <tr>
                         <td>大大</td>
                         <td>楼主好人，顶一个</td>
@@ -87,7 +87,7 @@
                             <a href="post-add.html" class="btn btn-warning btn-xs">驳回</a>
                             <a href="javascript:;" class="btn btn-danger btn-xs">删除</a>
                         </td>
-                    </tr>
+                    </tr> -->
                 </tbody>
             </table>
         </div>
@@ -132,6 +132,93 @@
 
     <script src="../assets/vendors/jquery/jquery.js"></script>
     <script src="../assets/vendors/bootstrap/js/bootstrap.js"></script>
+    <script src="../assets/vendors/art-template/template-web.js"></script>
+    <!-- 列表模板 -->
+    <script type="text/html" id="commentTpl">
+        {{each records}}
+        <tr class="danger">
+            <td>{{$value.author.nickName}}</td>
+            <td>{{$value.content}}</td>
+            <td>{{$value.post.title}}</td>
+            <td>{{$value.createAt}}</td>
+            <td>{{$value.state == 0 ? '未审核' : '已批准'}}</td>
+            <td class="text-center">
+                <a href="post-add.html" class="btn btn-info btn-xs status" data-status="{{$value.state}}" data-id="{{$value._id}}">{{$value.state == 0 ? '批准' : '驳回'}}</a>
+                <a href="javascript:;" class="btn btn-danger btn-xs delete" data-id="{{$value._id}}">删除</a>
+            </td>
+        </tr>
+        {{/each}}
+        <!-- 分页模板 -->
+        <script type="text/html" id="pageTpl">
+            {{if paage > 1}}
+            <li><a href="javascript:;" onclick="changePage({{page - 1}})">上一页</a></li>
+            {{/if}} {{each display}}
+            <li><a href="javascript:;" onclick="changePage({{$value}})">{{$value}}</a></li>
+            {{/each}} {{if page
+            < pages}} <li><a href="javascript:;" onclick="changePage({{page + 1}})">下一页</a></li>
+                {{/if}}
+        </script>
+    </script>
+    <script>
+        // 展示数据
+        $.ajax({
+            type: 'post',
+            url: '/comments',
+            success: function(res) {
+                // console.log(res);
+                var html = template('commentTpl', res);
+                $('tbody').html(html);
+                var pageHtml = template('pageTpl', res);
+                $('#pageBox').html(pageHtml);
+            }
+        });
+        // 实现分页
+        function changePage(page) {
+            $.ajax({
+                type: 'post',
+                url: '/comments',
+                data: {
+                    page: page
+                },
+                success: function(res) {
+                    console.log(res);
+                    var html = template('commentTpl', res);
+                    $('tbody').html(html);
+                    var pageHtml = template('pageTpl', res);
+                    $('#pageBox').html(pageHtml);
+                }
+            });
+        };
+        // 审核按钮
+        $('tbody').on('click', '.status', function() {
+            var status = $(this).attr('data-status');
+            var id = $(this).attr('data-id');
+            $.ajax({
+                type: 'put',
+                url: '/comments/' + id,
+                data: {
+                    state: status == 0 ? 1 : 0
+                },
+                success: function(res) {
+                    // render(res);
+                }
+            })
+        });
+        // 删除
+        $('tbody').on('click', '.delete', function() {
+            if (confirm('你确定要删除吗？')) {
+                var id = $(this).attr('data-id');
+                $.ajax({
+                    type: 'delete',
+                    url: '/comments/' + id,
+                    success: function(res) {
+                        // render(res);
+                    }
+                })
+            }
+        });
+    </script>
+
     <script>
         NProgress.done()
     </script>

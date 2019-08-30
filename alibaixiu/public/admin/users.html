@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="../assets/vendors/nprogress/nprogress.css">
     <link rel="stylesheet" href="../assets/css/admin.css">
     <script src="../assets/vendors/nprogress/nprogress.js"></script>
+    <script src="./comment.js"></script>
 </head>
 
 <body>
@@ -27,7 +28,7 @@
             <button class="btn btn-default navbar-btn fa fa-bars"></button>
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="profile.html"><i class="fa fa-user"></i>个人中心</a></li>
-                <li><a href="login.html"><i class="fa fa-sign-out"></i>退出</a></li>
+                <li><a href="login.html"><i class="fa fa-sign-out" id="loginout"></i>退出</a></li>
             </ul>
         </nav>
         <div class="container-fluid">
@@ -385,17 +386,19 @@
         });
         // 批量删除按钮
         $('#allDel').on('click', function() {
-            var checkUser = $('tbody input:checked');
+            var checkUser = $('tbody input:checked'); // jquery 元素
             var ids = [];
-            // 遍历
+            // 遍历dom 元素
             checkUser.each(function(index, item) {
+                // console.log(item);
                 ids.push($(item).attr('data-id'));
+                // console.log($(item).attr('data-id'));
             })
             $.ajax({
                 url: '/users/' + ids.join('-'),
                 type: 'delete',
                 success: function(res) {
-                    // console.log(res);
+                    console.log(res);
                     // 数组中的id 和 用户要删除的id 进行匹配
                     res.forEach(value => {
                         var index = userArr.findIndex(item => item._id == value._id);
@@ -404,6 +407,16 @@
                     })
                 }
             })
+        });
+
+        //展示用户相关信息
+        $.ajax({
+            type: 'get',
+            url: '/users/' + userId,
+            success: function(res) {
+                $('.avatar').attr('src', res.avatar)
+                $('.profile .name').html(res.nickName)
+            }
         });
     </script>
 </body>
